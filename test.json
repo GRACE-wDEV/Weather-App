@@ -1,0 +1,11 @@
+{
+  "number": 100,
+  "city": "Egypt",
+  "object": 
+  {
+    "EG": "Giza",
+    "US": "New York",
+    "UK": "London"
+  },
+  "array": [1, 2, 3, 4, 5]
+}
