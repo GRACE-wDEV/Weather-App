@@ -17,30 +17,29 @@ const weatherCodes =
   thunder: [1087, 1279, 1282],
   thunder_rain: [1273, 1276],
 }
-
-const displayHourlyForecast = (hourlyData) => {
+const displayHourlyData = (combinedHourlyData)=>
+{
   const currentHour = new Date().setMinutes(0, 0, 0);
-  const next24Hours = currentHour + 24 * 60 * 60 * 1000;
-  const next24HoursData = hourlyData.filter(({ time })=>{
-    const forecastTime = new Date(time).getTime();
-    return forecastTime>= currentHour && forecastTime <= next24Hours;
-  })
-  hourlyWeatherList.innerHTML  = next24HoursData.map((item)=>{
+  const next24Hour = currentHour +24*60*60*1000;
+  const next24HourlyData = combinedHourlyData.filter(item=>{
+    const foreCastHour = new Date(item.time).getTime();
+    return foreCastHour >= currentHour && foreCastHour <= next24Hour;
+  });
+    hourlyWeatherList.innerHTML  = next24HourlyData.map(item=>{
     const time = item.time.split(" ")[1];
-    const temperature = Math.ceil(item.temp_c);
-    const weatherIcon = Object.keys(weatherCodes).find(icon=>weatherCodes[icon].includes(item.condition.code));
-    return `<li class="weather-item">
-              <p class="time">${time}</p>
-              <img src="icons/${weatherIcon}.svg" class="weather-icon">
-              <p class="temperature">${temperature}&deg;</p>
-            </li>`
+    const temperature = Math.floor(item.temp_c);
+    const weatherIcon = Object.keys(weatherCodes).find((key) => weatherCodes[key].includes(item.condition.code));
+    return `
+    <li class="weather-item">
+      <p class="time">${time}</p>
+      <img src="icons/${weatherIcon}.svg" class="weather-icon">
+      <p class="temperature"> ${temperature}&deg;</p>
+    </li>
+    `
   }).join("");
 }
 
 const getWeatherDetails= async(API_URL)=>{
-  window.innerWidth<=768 && searchInput.blur();
-  document.body.classList.remove("show-no-results")
-
   try
   {
     // Fetch weather data from the API
@@ -48,46 +47,42 @@ const getWeatherDetails= async(API_URL)=>{
     const data = await response.json();
     // Extract current data :)
     const temperature = data.current.temp_c;
-    const description = data.current.condition.text;
-    const weatherIcon = Object.keys(weatherCodes).find(icon=>weatherCodes[icon].includes(data.current.condition.code));// find the key that contains the code for the condition code.
+    const description = data.current.condition.text;//.current.condition.code
+    const weatherIcon = Object.keys(weatherCodes).find((key)=>weatherCodes[key].includes(data.current.condition.code));
 
     // Update the current weather display
-    currentWeatherDiv.querySelector('.weather-icon').src = `icons/${weatherIcon}.svg`;
-    currentWeatherDiv.querySelector('.temperature').innerHTML=`${Math.ceil(temperature)} <span>&deg;C</span>`
+    currentWeatherDiv.querySelector('.weather-icon').src=`icons/${weatherIcon}.svg`;
+    currentWeatherDiv.querySelector('.temperature').innerHTML=`${Math.ceil(temperature)} <span>&deg;C</span>`;
     currentWeatherDiv.querySelector('.description').textContent=description;
-
+    
     const combinedHourlyData = [...data.forecast.forecastday[0].hour, ...data.forecast.forecastday[1].hour];
-    displayHourlyForecast(combinedHourlyData);
+    displayHourlyData(combinedHourlyData);
     searchInput.value=data.location.name;
   }catch (error)
   {
-    document.body.classList.add("show-no-results")
   }
 }
-
-const setupWeatherRequest = (cityName)=>{
-  const API_URL = `http://api.weatherapi.com/v1//forecast.json?key=${API_KEY}&q=${cityName}&days=2`;
-  getWeatherDetails(API_URL)
+const setUpCityData = (cityName)=>{
+  const API_URL = `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${cityName}&days=2`;
+  getWeatherDetails(API_URL);
 }
-
 searchInput.addEventListener('keyup', (e)=>{
   const cityName = searchInput.value.trim();
   if(e.key=="Enter" && cityName)
   {
-    setupWeatherRequest(cityName);
+    setUpCityData(cityName);
   }
 })
 
-locationButton.addEventListener("click", ()=>{
-  navigator.geolocation.getCurrentPosition( position =>{
-    // console.log(position);
-    const {latitude, longitude} = position.coords;
-    const API_URL = `http://api.weatherapi.com/v1//forecast.json?key=${API_KEY}&q=${latitude},${longitude}&days=2`;
-    getWeatherDetails(API_URL);
-  },error=>{
-    alert("Location access denied. Please enable permissions to use this feature");
-  })
-})
-// you'll do it, man. one day you'll get what u want just keep pushing so hard BY yourself, ALONE. 12 to 14 hours a day!
 
-setupWeatherRequest("cairo");
+locationButton.addEventListener("click",  ()=>{
+  navigator.geolocation.getCurrentPosition((position)=>{
+    let {latitude:lt, longitude:lg} = position.coords;
+    const API_URL = `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${lt},${lg}&days=2`;
+    getWeatherDetails(API_URL);
+  },()=>{
+    alert("Access denied");
+  })
+});
+
+setUpCityData("new york");
