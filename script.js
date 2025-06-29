@@ -40,6 +40,8 @@ const displayHourlyData = (combinedHourlyData)=>
 }
 
 const getWeatherDetails= async(API_URL)=>{
+  if(window.innerWidth < 642) searchInput.blur();
+  document.body.classList.remove('show-no-results');
   try
   {
     // Fetch weather data from the API
@@ -60,6 +62,7 @@ const getWeatherDetails= async(API_URL)=>{
     searchInput.value=data.location.name;
   }catch (error)
   {
+    document.body.classList.add('show-no-results');
   }
 }
 const setUpCityData = (cityName)=>{
@@ -86,3 +89,4 @@ locationButton.addEventListener("click",  ()=>{
 });
 
 setUpCityData("new york");
+console.log("I have days I don't wanna do it, bu tI know I'm gonna do it")
